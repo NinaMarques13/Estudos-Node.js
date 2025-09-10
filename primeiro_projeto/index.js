@@ -3,31 +3,47 @@ import { DatabaseMemory } from './database-memory.js'
 import { create } from 'node:domain'
 import { title } from 'node:process'
 import { describe } from 'node:test'
+import { request } from 'node:http'
 
 const server = fastify()
 
 const database = new DatabaseMemory()
 
 server.post('/videos', (request, reply) => {
-    database.create({
-        title: 'vlog 01',
-        description: 'o primeiro vlog',
-        duration: 320,
-    })
-    console.log(database.list())
+    const {title, description, duration} = request.body
 
+    database.create({
+        title,
+        description,
+        duration,
+    })
+    
     return reply.status(201).send()
 })
 
 server.get('/videos', () => {
-    return 'Olá mundo!'
+    const videos = database.list()
+
+    return  videos
 })
 
-server.put('/videos/:id', () => {
-    return 'Salve!'
+server.put('/videos/:id', (request, reply) => {
+    const videoId = request.params.id
+    const { title, description, duration } = request.body 
+
+    database.update(videoId, {
+        title,
+        description,
+        duration,
+    })
+    return reply.status(204).send()
 })
-server.delete('/videos/:id', () => {
-    return 'Salve!'
+server.delete('/videos/:id', (request, reply) => {
+    const videoId = request.params.id
+    
+    database.delete(videoId)
+
+    return reply.status(204).send()
 })
 
 
